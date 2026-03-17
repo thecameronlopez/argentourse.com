@@ -11,15 +11,20 @@ Stack:
 Backend - FastAPI - PostgreSQL - SQLAlchemy 2.0 - Alembic - Pydantic
 v2 - uv (package manager)
 
-Frontend (planned) - React - Vite - TanStack Query
+Frontend - React - Vite - TypeScript - TanStack Query - TanStack
+Router - Axios - Tailwind (optional)
 
 Money values stored as integer cents.
 
 ------------------------------------------------------------------------
 
-# Backend Architecture
+# Repository Structure
 
-## Folder structure
+argentourse/ │ ├─ server/ (FastAPI backend) │ └─ web/ (React frontend)
+
+------------------------------------------------------------------------
+
+# Backend Architecture
 
 server/ │ ├─ pyproject.toml ├─ uv.lock ├─ .env │ ├─ alembic/ │ └─ app/ │
 ├─ main.py │ ├─ core/ │ ├─ config.py │ └─ db.py │ ├─ models/ │ ├─
@@ -145,18 +150,85 @@ upgrade head
 
 ------------------------------------------------------------------------
 
-# Next Development Steps
+# Frontend Setup
 
-1.  Finalize BaseService
-2.  Implement Category service + endpoints
-3.  Implement Transaction service
-4.  Implement Transfer endpoint
-5.  Build Dashboard queries
+Frontend lives in:
 
-Example future endpoints:
+web/
 
-POST /api/v1/transfers GET /api/v1/dashboard/summary GET
-/api/v1/dashboard/net-worth
+Create project:
+
+npm create vite@latest web
+
+Choose:
+
+React TypeScript
+
+Install dependencies:
+
+npm install
+
+Core libraries:
+
+npm install @tanstack/react-query npm install @tanstack/react-router npm
+install axios
+
+Optional UI stack:
+
+npm install tailwindcss postcss autoprefixer
+
+------------------------------------------------------------------------
+
+# Frontend Structure
+
+web/ │ ├─ src/ │ │ │ ├─ main.tsx │ ├─ App.tsx │ │ │ ├─ api/ │ │
+client.ts │ │ │ ├─ routes/ │ │ index.tsx │ │ accounts.tsx │ │ │ ├─
+features/ │ │ accounts/ │ │ AccountsPage.tsx │ │ useAccounts.ts │ │ │ ├─
+components/ │ │ │ └─ types/ │ └─ vite.config.ts
+
+Conceptual structure mirrors backend:
+
+routes → pages features → domain logic api → backend communication
+
+------------------------------------------------------------------------
+
+# Frontend Data Flow
+
+React Query handles API state.
+
+Example flow:
+
+component → hook → API → backend
+
+Example:
+
+useAccounts()
+
+calls
+
+GET /api/v1/accounts
+
+------------------------------------------------------------------------
+
+# Frontend Dev Workflow
+
+Run backend:
+
+uv run uvicorn app.main:app --reload
+
+Run frontend:
+
+npm run dev
+
+Frontend:
+
+http://localhost:5173
+
+Backend:
+
+http://localhost:8000
+
+Later Vite proxy will forward API requests.
 
 ------------------------------------------------------------------------
 
@@ -183,17 +255,6 @@ Example:
 \$178.60 → 17860
 
 Never store floats.
-
-------------------------------------------------------------------------
-
-# Notes
-
-Architecture intentionally resembles Flask app factory pattern but
-implemented with FastAPI dependency injection.
-
-Key concepts:
-
-Depends() routers services schemas
 
 ------------------------------------------------------------------------
 
