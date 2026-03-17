@@ -1,0 +1,28 @@
+[project]
+name = "Argentourse"
+version = "0.1.0"
+description = "Personal Finance Tracker"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]",
+    "sqlalchemy",
+    "alembic",
+    "psycopg[binary]",
+    "pydantic-settings",
+    "passlib[argon2]",
+    "python-jose[cryptography]",
+    "fastapi-mail",
+    "email-validator",
+    "python-multipart"
+]
+
+[project.optional-dependancies]
+dev = [
+    "pytest",
+    "pytest-asyncio",
+    "httpx",
+    "ruff",
+    "black"
+]
