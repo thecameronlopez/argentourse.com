@@ -11,11 +11,12 @@ dependencies = [
     "alembic",
     "psycopg[binary]",
     "pydantic-settings",
-    "passlib[argon2]",
     "python-jose[cryptography]",
     "fastapi-mail",
     "email-validator",
-    "python-multipart"
+    "python-multipart",
+    "pwdlib[argon2]",
+    "PyJWT"
 ]
 
 [project.optional-dependancies]
