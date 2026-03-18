@@ -5,11 +5,14 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
 from app.core.db import get_db
-from app.models import User
 from app.schemas import AccountCreate, AccountRead, AccountUpdate
-from app.services import account_service
+from app.services.base_service import BaseService
+from app.models import Account, User
 
 router = APIRouter()
+
+class AccountService(BaseService[Account, AccountCreate, AccountUpdate]):
+    model = Account
 
 @router.post("/", response_model=AccountRead, status_code=status.HTTP_201_CREATED)
 def create_account(
@@ -17,7 +20,7 @@ def create_account(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    return account_service.create_account(
+    return AccountService.create(
         db=db,
         user_id=current_user.id,
         data=payload,
@@ -30,7 +33,7 @@ def list_accounts(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    return account_service.list_accounts(
+    return AccountService.list(
         db=db,
         user_id=current_user.id
     )
@@ -43,7 +46,7 @@ def get_account(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    account = account_service.get_account(
+    account = AccountService.get(
         db=db,
         user_id=current_user.id,
         account_id=account_id,
@@ -64,7 +67,7 @@ def update_account(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    account = account_service.update_account(
+    account = AccountService.update(
         db=db,
         user_id=current_user.id,
         account_id=account_id,
@@ -84,7 +87,7 @@ def delete_account(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    deleted = account_service.delete_account(
+    deleted = AccountService.delete(
         db=db,
         user_id=current_user.id,
         account_id=account_id

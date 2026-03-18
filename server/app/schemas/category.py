@@ -1,13 +1,22 @@
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
-class CategoryCreate(BaseModel):
-    name: str
-    category_type: str
+
+class CategoryBase(BaseModel):
+    name: str = Field(..., min_length=1, max_length=100)
+    category_type: str = Field(..., min_length=1, max_length=100)
+
+class CategoryCreate(CategoryBase):
+    pass
+
+class CategoryUpdate(BaseModel):
+    name: str | None = Field(default=None, min_length=1, max_length=100)
+    category_type: str | None = Field(default=None, min_length=1, max_length=100)
     
-class CategoryRead(BaseModel):
+    
+class CategoryRead(CategoryBase):
     id: UUID
     user_id: UUID
     name: str

@@ -12,6 +12,7 @@ class Account(Base):
     
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     institution: Mapped[str | None] = mapped_column(String(100), nullable=False)
+    account_type: Mapped[str] = mapped_column(String(100), nullable=False)
     current_balance_cents: Mapped[int] = mapped_column(BigInteger, default=0, nullable=False)
     
     created_at: Mapped[datetime] = mapped_column(
