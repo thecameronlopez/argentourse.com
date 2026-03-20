@@ -8,6 +8,13 @@ from app.models import User
 from app.schemas import UserProfileUpdate
 
 
+class UserNotFoundError(Exception):
+    pass
+
+class EmailAlreadyInUseError(Exception):
+    pass
+
+
 class UserService:
     model = User
     
@@ -25,7 +32,7 @@ class UserService:
     def update_profile(cls, db: Session, user_id: UUID, data: UserProfileUpdate) -> User | None:
         user = db.get(cls.model, user_id)
         if user is None:
-            return None
+            raise UserNotFoundError("User not found")
         
         updates = data.model_dump(exclude_unset=True)
         for field, value in updates.items():
@@ -37,7 +44,7 @@ class UserService:
                     )
                 )
                 if existing is not None:
-                    return None
+                    raise EmailAlreadyInUseError("Email already in use")
             setattr(user, field, value)
         
         db.commit()

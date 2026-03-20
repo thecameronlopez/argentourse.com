@@ -13,6 +13,18 @@ from sqlalchemy import select, delete
 from app.models import User, ResetToken
 from app.schemas import UserCreate
 
+class EmailAlreadyInUseError(Exception):
+    pass
+
+class UserNotFoundError(Exception):
+    pass
+
+class InvalidCredentialsError(Exception):
+    pass
+
+class InvalidTokenError(Exception):
+    pass
+
 
 class AuthService:
     model = User
@@ -39,6 +51,9 @@ class AuthService:
     
     @classmethod
     def create_user(cls, db: Session, data: UserCreate) -> User:
+        if db.scalar(select(cls.model).where(cls.model.email == data.email)):
+            raise EmailAlreadyInUseError("Email already in use")
+        
         payload = data.model_dump()
         user = cls.model(
             first_name=payload["first_name"],
@@ -54,14 +69,14 @@ class AuthService:
     
     
     @classmethod
-    def authenticate(cls, db: Session, email: str, password: str) -> User | None:
+    def authenticate(cls, db: Session, email: str, password: str) -> User:
         user = db.scalar(select(cls.model).where(cls.model.email == email))
         if user is None:
-            return None
+            raise UserNotFoundError("User not found")
         
         valid, updated_hash = cls._verify_and_maybe_rehash(password, user.password_hash)
         if not valid:
-            return None
+            raise InvalidCredentialsError("Invalid Credentials")
         
         if updated_hash is not None:
             user.password_hash = updated_hash
@@ -74,11 +89,11 @@ class AuthService:
     def change_password(cls, db: Session, user_id: UUID, current_password: str, new_password: str) -> bool:
         user = db.get(cls.model, user_id)
         if user is None:
-            return False
+            raise UserNotFoundError("User not found")
         
         valid, _ = cls._verify_and_maybe_rehash(current_password, user.password_hash)
         if not valid:
-            return False
+            raise InvalidCredentialsError("Invalid credentials")
         
         user.password_hash = cls._hash_password(new_password)
         db.commit()
@@ -87,10 +102,10 @@ class AuthService:
     
     
     @classmethod
-    def request_password_reset(cls, db: Session, email: str) -> None:
+    def request_password_reset(cls, db: Session, email: str) -> str:
         user = db.scalar(select(cls.model).where(cls.model.email == email))
         if user is None:
-            return None
+            raise UserNotFoundError("User not found")
         
         db.execute(delete(ResetToken).where(ResetToken.user_id == user.id))
         
@@ -105,7 +120,7 @@ class AuthService:
         db.add(reset)
         db.commit()
         
-        return None
+        return raw_token
         
         
     @classmethod
@@ -119,11 +134,11 @@ class AuthService:
             )
         )
         if reset is None:
-            return False
+            raise InvalidTokenError("Token is invalid or expired")
         
         user = db.get(cls.model, reset.user_id)
         if user is None:
-            return False
+            raise UserNotFoundError("User not found")
         
         user.password_hash = cls._hash_password(new_password)
         db.delete(reset)        
