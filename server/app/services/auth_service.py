@@ -10,25 +10,15 @@ from sqlalchemy.orm import Session as DBSession
 
 from app.core.security import Security
 from app.core.config import settings
+from app.core.errors import (
+    EmailAlreadyInUseError,
+    InvalidCredentialsError,
+    InvalidTokenError,
+    UserNotFoundError
+)
 from app.models import User, ResetToken, Session as SessionModel
 from app.schemas import UserCreate
 
-
-
-class AuthServiceError(Exception):
-    pass
-
-class EmailAlreadyInUseError(AuthServiceError):
-    pass
-
-class UserNotFoundError(AuthServiceError):
-    pass
-
-class InvalidCredentialsError(AuthServiceError):
-    pass
-
-class InvalidTokenError(AuthServiceError):
-    pass
 
 
 @dataclass(frozen=True, slots=True)
@@ -66,7 +56,7 @@ class AuthService:
             db.commit()
         except IntegrityError as exc:
             db.rollback()
-            raise EmailAlreadyInUseError("Email already in use") from exc
+            raise EmailAlreadyInUseError() from exc
         
         db.refresh(user)
         return user
@@ -77,11 +67,11 @@ class AuthService:
     def authenticate(cls, db: DBSession, email: str, password: str) -> User:
         user = db.scalar(select(cls.user_model).where(cls.user_model.email == email))
         if user is None:
-            raise InvalidCredentialsError("Invalid credentials")
+            raise InvalidCredentialsError()
         
         valid, updated_hash = Security.verify_and_maybe_rehash(password, user.password_hash)
         if not valid:
-            raise InvalidCredentialsError("Invalid credentials")
+            raise InvalidCredentialsError()
         
         if updated_hash is not None:
             user.password_hash = updated_hash
@@ -248,7 +238,7 @@ class AuthService:
         try:
             token_hash = Security.hash_token(token)
         except (TypeError, ValueError):
-            raise InvalidTokenError("Token is invalid or expired")
+            raise InvalidTokenError()
         
         reset = db.scalar(
             select(cls.reset_model).where(
@@ -257,11 +247,11 @@ class AuthService:
             )
         )
         if reset is None:
-            raise InvalidTokenError("Token is invalid or expired")
+            raise InvalidTokenError()
         
         user = db.get(cls.user_model, reset.user_id)
         if user is None:
-            raise UserNotFoundError("User not found")
+            raise UserNotFoundError()
         
         user.password_hash = Security.hash_password(new_password)
         db.delete(reset)  
@@ -286,11 +276,11 @@ class AuthService:
     def change_password(cls, db: DBSession, user_id: UUID, current_password: str, new_password: str) -> bool:
         user = db.get(cls.user_model, user_id)
         if user is None:
-            raise UserNotFoundError("User not found")
+            raise UserNotFoundError()
         
         valid, _ = Security.verify_and_maybe_rehash(current_password, user.password_hash)
         if not valid:
-            raise InvalidCredentialsError("Invalid credentials")
+            raise InvalidCredentialsError()
         
         user.password_hash = Security.hash_password(new_password)
         db.execute(

@@ -6,12 +6,7 @@ from sqlalchemy import text
 from app.api.v1.api import api_router
 from app.core.db import engine
 
-from app.services.auth_service import (
-    EmailAlreadyInUseError,
-    InvalidCredentialsError,
-    InvalidTokenError,
-    UserNotFoundError
-)
+from app.core.errors import AppError
 
 app = FastAPI(title="Argentourse API")
 
@@ -23,21 +18,10 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
-@app.exception_handler(EmailAlreadyInUseError)
-async def handle_email_in_use(_: Request, exc: EmailAlreadyInUseError):
-    return JSONResponse(status_code=409, content={"detail": "Email already in use"})
+@app.exception_handler(AppError)
+async def handle_email_in_use(_: Request, exc: AppError):
+    return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
 
-@app.exception_handler(InvalidCredentialsError)
-async def handle_invalid_credntials(_: Request, exc: InvalidCredentialsError):
-    return JSONResponse(status_code=401, content={"detail": "Invalid crednetials"})
-
-@app.exception_handler(UserNotFoundError)
-async def handle_user_not_found_error(_: Request, exc: UserNotFoundError):
-    return JSONResponse(status_code=404, content={"detail": "User not found"})
-
-@app.exception_handler(InvalidTokenError)
-async def handle_invalid_token(_: Request, exc: InvalidTokenError):
-    return JSONResponse(status_code=400, content={"detail": "Invalid or expired token"})
 
 @app.get("/")
 def read_root():

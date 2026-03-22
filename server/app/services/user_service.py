@@ -2,17 +2,15 @@ from __future__ import annotations
 from uuid import UUID
 
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy import select
 
 from app.models import User
 from app.schemas import UserProfileUpdate
-
-
-class UserNotFoundError(Exception):
-    pass
-
-class EmailAlreadyInUseError(Exception):
-    pass
+from app.core.errors import (
+    UserNotFoundError,
+    EmailAlreadyInUseError
+)
 
 
 class UserService:
@@ -29,25 +27,20 @@ class UserService:
     
     
     @classmethod
-    def update_profile(cls, db: Session, user_id: UUID, data: UserProfileUpdate) -> User | None:
+    def update_profile(cls, db: Session, user_id: UUID, data: UserProfileUpdate) -> User:
         user = db.get(cls.model, user_id)
         if user is None:
-            raise UserNotFoundError("User not found")
+            raise UserNotFoundError()
         
         updates = data.model_dump(exclude_unset=True)
         for field, value in updates.items():
-            if field == "email":
-                existing = db.scalar(
-                    select(cls.model).where(
-                        cls.model.email == value,
-                        cls.model.id != user_id
-                    )
-                )
-                if existing is not None:
-                    raise EmailAlreadyInUseError("Email already in use")
             setattr(user, field, value)
         
-        db.commit()
+        try:
+            db.commit()
+        except IntegrityError:
+            db.rollback()
+            raise EmailAlreadyInUseError()
         db.refresh(user)
         return user
     

@@ -3,13 +3,15 @@ from sqlalchemy.orm import Session as DBSession
 
 from app.core.config import settings
 from app.core.db import get_db
+from app.api.deps import require_csrf
 
 from app.schemas import (
     UserCreate, 
     UserRead, 
     UserLogin, 
     ForgotPasswordRequest, 
-    ResetPasswordRequest
+    ResetPasswordRequest,
+    ChangePasswordRequest
 )
 from app.services.auth_service import AuthService
 
@@ -102,7 +104,8 @@ def forgot_password(
 @router.post("/reset-password", status_code=status.HTTP_204_NO_CONTENT)
 def reset_password(
     payload: ResetPasswordRequest,
-    db: DBSession = Depends(get_db)
+    db: DBSession = Depends(get_db),
+    _: None = Depends(require_csrf)
 ) -> None:
     AuthService.reset_password(
         db=db,
@@ -110,3 +113,4 @@ def reset_password(
         new_password=payload.new_password
     )
     return None
+

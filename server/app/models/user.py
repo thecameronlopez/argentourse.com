@@ -27,5 +27,7 @@ class User(Base):
     accounts = relationship("Account", back_populates="user", cascade="all, delete-orphan")
     categories = relationship("Category", back_populates="user", cascade="all, delete-orphan")
     sessions = relationship("Session", back_populates="user", cascade="all, delete-orphan")
+    transactions = relationship("Transaction", back_populates="user", cascade="all, delete-orphan")
+    reset_tokens = relationship("ResetToken", back_populates="user", cascade="all, delete-orphan")
     
     
