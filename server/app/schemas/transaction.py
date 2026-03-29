@@ -82,3 +82,16 @@ class TransactionImportResult(BaseModel):
     batch_id: UUID
     started_at: datetime
     finished_at: datetime
+
+
+class TransactionReclassifyRequest(BaseModel):
+    category_id: UUID | None = None
+
+
+class TransactionBulkReclassifyRequest(BaseModel):
+    transaction_ids: list[UUID] = Field(min_length=1)
+    category_id: UUID | None = None
+
+
+class TransactionBulkReclassifyResult(BaseModel):
+    updated: int

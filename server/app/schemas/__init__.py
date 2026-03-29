@@ -8,7 +8,10 @@ from .transaction import (
     TransactionImportPreviewResult,
     TransactionImportRequest,
     TransactionImportResult,
-    TransactionUpdate
+    TransactionUpdate,
+    TransactionReclassifyRequest,
+    TransactionBulkReclassifyRequest,
+    TransactionBulkReclassifyResult,
 )
 from .user import UserCreate, UserRead, UserPasswordChange, UserProfileUpdate
 from .auth import ForgotPasswordRequest, ResetPasswordRequest, UserLogin, ChangePasswordRequest

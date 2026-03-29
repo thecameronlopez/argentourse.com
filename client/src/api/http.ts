@@ -1,5 +1,13 @@
 import axios from "axios";
 
+export type ApiError = {
+  message: string;
+  status?: number;
+  data?: {
+    detail?: unknown;
+  };
+};
+
 export const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
   withCredentials: true,
@@ -11,10 +19,12 @@ export const api = axios.create({
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    return Promise.reject({
+    const normalized: ApiError = {
       message: error.message,
       status: error.response?.status,
       data: error.response?.data,
-    });
+    };
+
+    return Promise.reject(normalized);
   },
 );

@@ -8,11 +8,15 @@ export type User = {
 };
 
 export async function getCurrentUser() {
-  const { data } = await api.get<User>("/auth/me");
+  const { data } = await api.get<User>("/me/");
   return data;
 }
 
 export async function login(payload: { email: string; password: string }) {
   const { data } = await api.post<User>("/auth/login", payload);
   return data;
+}
+
+export async function logout() {
+  await api.post("/auth/logout");
 }
